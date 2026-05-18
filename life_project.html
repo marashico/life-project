@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>生活改善プロジェクト</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --bg:#080c14; --card:rgba(255,255,255,0.04); --border:rgba(100,160,255,0.12);
+  --border2:rgba(255,255,255,0.06); --blue:#4a90e2; --blue2:#2563eb; --blue3:#60a5fa;
+  --cyan:#22d3ee; --text:rgba(255,255,255,0.9); --muted:rgba(255,255,255,0.38);
+  --muted2:rgba(255,255,255,0.55); --green:#10b981; --amber:#f59e0b; --red:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 80% 0%,rgba(37,99,235,0.12) 0%,transparent 60%),radial-gradient(ellipse 40% 30% at 10% 90%,rgba(34,211,238,0.06) 0%,transparent 50%);pointer-events:none;z-index:0;}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem 0.6rem;flex-shrink:0;position:relative;z-index:10;border-bottom:1px solid var(--border);}
+.header-title{font-family:'DM Serif Display',serif;font-size:1.15rem;color:white;letter-spacing:-0.01em;}
+.header-sub{font-size:0.62rem;color:var(--muted);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-top:0.1rem;}
+.header-right{display:flex;align-items:center;gap:0.5rem;}
+.header-badge{font-size:0.65rem;font-weight:600;color:var(--blue3);background:rgba(74,144,226,0.12);border:1px solid rgba(74,144,226,0.2);border-radius:6px;padding:0.25rem 0.7rem;}
+.sync-btn{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:6px;padding:0.25rem 0.6rem;color:var(--green);font-size:0.62rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.sync-btn:active{opacity:0.7;}
+#sync-status{font-size:0.6rem;color:var(--green);opacity:0;transition:opacity 0.3s;white-space:nowrap;}
+
+/* SCROLL */
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative;z-index:1;}
+.scroll-inner{padding:0.8rem 1rem 1.5rem;}
+
+/* NAV */
+.bottom-nav{display:flex;background:rgba(8,12,20,0.97);border-top:1px solid var(--border);padding:0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));flex-shrink:0;z-index:10;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.2rem;background:none;border:none;color:var(--muted);cursor:pointer;padding:0.3rem 0;font-family:'DM Sans',sans-serif;transition:color 0.15s;}
+.nav-btn.active{color:var(--blue3);}
+.nav-icon{font-size:1.1rem;}
+.nav-label{font-size:0.56rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+
+/* SECTIONS */
+.section{display:none;}
+.section.active{display:block;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:1rem 1.1rem;margin-bottom:0.7rem;}
+.card-title{font-size:0.65rem;font-weight:600;color:var(--blue3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;}
+.divider{font-size:0.6rem;font-weight:600;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin:0.9rem 0 0.45rem;display:flex;align-items:center;gap:0.5rem;}
+.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
+
+/* PROGRESS */
+.progress-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:0.6rem;}
+.progress-label{font-size:0.7rem;font-weight:500;color:var(--muted2);}
+.progress-num{font-family:'DM Serif Display',serif;font-size:1.5rem;color:white;line-height:1;}
+.progress-pct{font-size:0.7rem;color:var(--blue3);font-weight:600;}
+.bar-bg{height:4px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;margin-bottom:0.6rem;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue2),var(--cyan));border-radius:99px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
+.status-text{font-size:0.74rem;color:var(--muted2);text-align:center;padding:0.5rem;background:rgba(74,144,226,0.06);border-radius:8px;font-weight:500;}
+.congrats{display:none;text-align:center;padding:0.7rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;font-size:0.78rem;color:var(--green);font-weight:600;margin-top:0.5rem;}
+.congrats.show{display:block;}
+
+/* TODAY CARD */
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.6rem;}
+.today-stat{background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:10px;padding:0.65rem 0.7rem;}
+.ts-label{font-size:0.58rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.2rem;}
+.ts-val{font-family:'DM Serif Display',serif;font-size:1.1rem;}
+.ts-sub{font-size:0.6rem;color:var(--muted);margin-top:0.1rem;}
+.c-blue{color:var(--blue3);} .c-green{color:var(--green);} .c-amber{color:var(--amber);} .c-red{color:var(--red);}
+.balance-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;margin:0.5rem 0;}
+.balance-fill{height:100%;border-radius:99px;transition:width 0.4s ease;}
+
+/* CHECKLIST */
+.check-item{display:flex;align-items:flex-start;gap:0.65rem;padding:0.65rem 0.8rem;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.05);border-radius:10px;margin-bottom:0.35rem;}
+.check-item.done{opacity:0.38;}
+.check-item.done .check-name{text-decoration:line-through;}
+.checkbox{width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(74,144,226,0.4);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:0.1rem;}
+.check-item.done .checkbox{background:var(--green);border-color:var(--green);}
+.check-mark{color:white;font-size:0.65rem;display:none;}
+.check-item.done .check-mark{display:block;}
+.check-name{font-size:0.82rem;font-weight:500;line-height:1.35;}
+.check-note{font-size:0.65rem;color:var(--muted);margin-top:0.1rem;line-height:1.4;}
+
+/* WEIGHT */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-bottom:0.8rem;}
+.stat-box{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:0.65rem 0.5rem;text-align:center;}
+.stat-lbl{font-size:0.58rem;color:var(--muted);font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.2rem;}
+.stat-val{font-family:'DM Serif Display',serif;font-size:1.1rem;}
+.graph-wrap{background:rgba(255,255,255,0.02);border:1px solid var(--border2);border-radius:12px;padding:0.8rem;margin-bottom:0.8rem;}
+canvas{width:100%!important;}
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:0.45rem 0.6rem;background:rgba(255,255,255,0.025);border-radius:7px;margin-bottom:0.3rem;font-size:0.76rem;}
+
+/* CHART TABS */
+.chart-tabs{display:flex;gap:0.3rem;margin-bottom:0.8rem;}
+.chart-tab{flex:1;padding:0.35rem 0.2rem;border-radius:7px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--muted);font-size:0.62rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;transition:all 0.15s;}
+.chart-tab.active{background:rgba(74,144,226,0.12);border-color:rgba(74,144,226,0.3);color:var(--blue3);}
+.chart-panel{display:none;}
+.chart-panel.active{display:block;}
+.chart-canvas-wrap{background:rgba(255,255,255,0.02);border:1px solid var(--border2);border-radius:12px;padding:0.8rem;margin-bottom:0.5rem;}
+.chart-legend{display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:0.4rem;}
+.legend-item{display:flex;align-items:center;gap:0.3rem;font-size:0.62rem;color:var(--muted2);}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.chart-stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.45rem;margin-bottom:0.6rem;}
+.chart-stat{background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:9px;padding:0.55rem 0.5rem;text-align:center;}
+.cs-lbl{font-size:0.58rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.15rem;}
+.cs-val{font-size:0.9rem;font-weight:600;}
+
+/* SUMMARY CARDS */
+.summary-card{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.5rem;}
+.summary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;}
+.summary-date{font-size:0.72rem;font-weight:600;color:var(--muted2);}
+.summary-score{font-size:0.65rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:99px;}
+.summary-score.A{background:rgba(16,185,129,0.15);color:var(--green);}
+.summary-score.B{background:rgba(74,144,226,0.15);color:var(--blue3);}
+.summary-score.C{background:rgba(245,158,11,0.15);color:var(--amber);}
+.summary-score.D{background:rgba(239,68,68,0.15);color:var(--red);}
+.summary-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem;margin-bottom:0.45rem;}
+.ss-item{text-align:center;}
+.ss-lbl{font-size:0.58rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+.ss-val{font-size:0.85rem;font-weight:600;}
+.summary-comment{font-size:0.72rem;color:var(--muted2);line-height:1.5;}
+
+/* EX ITEMS */
+.ex-item{display:flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:9px;padding:0.5rem 0.75rem;margin-bottom:0.3rem;}
+.ex-icon{font-size:1rem;}
+.ex-body{flex:1;}
+.ex-name-t{font-size:0.78rem;font-weight:500;}
+.ex-meta{font-size:0.62rem;color:var(--muted);}
+.ex-kcal{font-size:0.78rem;font-weight:600;color:var(--amber);}
+
+/* FOOD LIST */
+.cat-tabs{display:flex;gap:0.3rem;margin-bottom:0.7rem;flex-wrap:wrap;}
+.cat-tab{padding:0.35rem 0.7rem;border-radius:7px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--muted);font-size:0.67rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;letter-spacing:0.03em;}
+.cat-tab.active{background:rgba(74,144,226,0.12);border-color:rgba(74,144,226,0.3);color:var(--blue3);}
+.sub-panel{display:none;}
+.sub-panel.active{display:block;}
+.grade-block{margin-bottom:0.8rem;}
+.grade-lbl{font-size:0.6rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px;display:inline-flex;align-items:center;gap:0.2rem;margin-bottom:0.4rem;}
+.gl-good{background:rgba(16,185,129,0.12);color:var(--green);}
+.gl-ok{background:rgba(245,158,11,0.12);color:var(--amber);}
+.gl-bad{background:rgba(239,68,68,0.12);color:var(--red);}
+.food-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.3rem;}
+.food-chip{background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:8px;padding:0.5rem 0.65rem;}
+.fc-name{font-size:0.76rem;font-weight:500;}
+.fc-note{font-size:0.6rem;color:var(--muted);margin-top:0.05rem;line-height:1.3;}
+
+/* GUIDE */
+.guide-item{background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:11px;padding:0.8rem 0.9rem;margin-bottom:0.45rem;}
+.guide-title{font-size:0.82rem;font-weight:600;margin-bottom:0.3rem;}
+.guide-body{font-size:0.73rem;color:rgba(255,255,255,0.62);line-height:1.65;}
+.supp-row{display:flex;justify-content:space-between;align-items:center;padding:0.48rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.77rem;}
+.supp-row:last-child{border-bottom:none;}
+.supp-time{color:var(--blue3);font-weight:600;font-size:0.68rem;min-width:68px;}
+.supp-dose{color:var(--amber);font-size:0.7rem;font-weight:600;}
+
+/* MOTIV */
+.motiv-upload{border:1.5px dashed rgba(74,144,226,0.25);border-radius:12px;padding:1.4rem;text-align:center;margin-bottom:0.8rem;cursor:pointer;}
+.motiv-upload input{display:none;}
+.motiv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+.motiv-wrap{position:relative;border-radius:10px;overflow:hidden;}
+.motiv-wrap img{width:100%;display:block;border-radius:10px;}
+.motiv-del{position:absolute;top:0.3rem;right:0.3rem;background:rgba(0,0,0,0.65);border:none;color:white;border-radius:99px;width:22px;height:22px;font-size:0.68rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:0.76rem;line-height:1.7;}
+.empty-icon{font-size:1.8rem;margin-bottom:0.5rem;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">生活改善プロジェクト</div>
+    <div class="header-sub">Self Improvement Dashboard</div>
+  </div>
+  <div class="header-right">
+    <span id="sync-status"></span>
+    <button class="sync-btn" onclick="fullSync()">↻ 同期</button>
+    <div class="header-badge">Goal: 7.30</div>
+  </div>
+</div>
+
+<div class="scroll-area"><div class="scroll-inner">
+
+<!-- ===== HOME ===== -->
+<div class="section active" id="s-home">
+
+  <!-- Progress -->
+  <div class="card">
+    <div class="progress-header">
+      <div class="progress-label">Overall Progress</div>
+      <div>
+        <span class="progress-num" id="progressNum">0</span>
+        <span style="font-size:0.75rem;color:var(--muted);"> / <span id="progressTotal">0</span></span>
+        <span class="progress-pct" style="margin-left:0.4rem;" id="progressPct">0%</span>
+      </div>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="status-text" id="statusText">—</div>
+    <div class="congrats" id="congrats">All tasks complete. Outstanding progress.</div>
+  </div>
+
+  <!-- Today Summary -->
+  <div class="card" id="today-card" style="display:none;">
+    <div class="card-title">Today's Summary</div>
+    <div class="today-grid">
+      <div class="today-stat">
+        <div class="ts-label">摂取</div>
+        <div class="ts-val" id="t-kcal">—</div>
+        <div class="ts-sub" id="t-kcal-sub"></div>
+      </div>
+      <div class="today-stat">
+        <div class="ts-label">消費（運動）</div>
+        <div class="ts-val c-green" id="t-burn">—</div>
+        <div class="ts-sub" id="t-burn-sub"></div>
+      </div>
+      <div class="today-stat">
+        <div class="ts-label">タンパク質</div>
+        <div class="ts-val c-blue" id="t-p">—</div>
+        <div class="ts-sub">目標 100g+</div>
+      </div>
+      <div class="today-stat">
+        <div class="ts-label">収支</div>
+        <div class="ts-val" id="t-balance">—</div>
+        <div class="ts-sub" id="t-balance-sub"></div>
+      </div>
+    </div>
+    <div class="balance-bar"><div class="balance-fill" id="t-bar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--muted);">
+      <span>目標 1,800kcal</span><span id="t-score-label"></span>
+    </div>
+  </div>
+
+  <!-- Checklist -->
+  <div class="divider">Daily Habits</div>
+  <div class="check-item" data-id="c1"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">朝スキンケア（洗顔 → 化粧水 → 乳液 → 日焼け止め）</div><div class="check-note">Skincare · 毎朝必須</div></div></div>
+  <div class="check-item" data-id="c2"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">夜スキンケア（洗顔 → 化粧水 → 乳液）</div><div class="check-note">Skincare · 就寝前</div></div></div>
+  <div class="check-item" data-id="c3"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">朝サプリ（エビオス 10錠・D3・オメガ3）</div><div class="check-note">Supplements · 朝食後</div></div></div>
+  <div class="check-item" data-id="c4"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">昼サプリ（エビオス 10錠）</div><div class="check-note">Supplements · 昼食後</div></div></div>
+  <div class="check-item" data-id="c5"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">夜サプリ（エビオス 10錠・マカ 8錠）</div><div class="check-note">Supplements · 夕食後</div></div></div>
+  <div class="check-item" data-id="c6"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">就寝1時間前（マグネシウム・L-テアニン）</div><div class="check-note">Supplements · Sleep quality</div></div></div>
+
+  <div class="divider">Training · 週3回</div>
+  <div class="check-item" data-id="c7"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">火曜：DAY A（胸・肩・三頭）</div><div class="check-note">Gym · Chest / Shoulder / Triceps</div></div></div>
+  <div class="check-item" data-id="c8"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">木曜：DAY B（背中・腹）</div><div class="check-note">Gym · Back / Core</div></div></div>
+  <div class="check-item" data-id="c9"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">土日どちらか：DAY A + 脚</div><div class="check-note">Gym · Full upper + Legs</div></div></div>
+  <div class="check-item" data-id="c10"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">筋トレ後プロテイン</div><div class="check-note">Nutrition · 30分以内</div></div></div>
+
+  <div class="divider">Setup Tasks</div>
+  <div class="check-item" data-id="c11"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">Amazon：サプリ4種（D3・オメガ3・マグネシウム・L-テアニン）</div><div class="check-note">Shopping</div></div></div>
+  <div class="check-item" data-id="c12"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">Amazon：アイマスク・耳栓（Macks Pillow Soft）</div><div class="check-note">Shopping · Sleep environment</div></div></div>
+  <div class="check-item" data-id="c13"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">Amazon：マイプロテイン（ミルクティー味）</div><div class="check-note">Shopping · Nutrition</div></div></div>
+  <div class="check-item" data-id="c14"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">ドラッグストア：洗顔・泡立てネット・日焼け止め（アネッサ）</div><div class="check-note">Shopping · Skincare</div></div></div>
+  <div class="check-item" data-id="c15"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">無印：敏感肌用化粧水・乳液（高保湿）</div><div class="check-note">Shopping · Skincare</div></div></div>
+  <div class="check-item" data-id="c16"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">不用品を全部処分（粗大ゴミ申請）</div><div class="check-note">Room · Declutter</div></div></div>
+  <div class="check-item" data-id="c17"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">ニトリ：収納付きベッド購入（セミダブル）＋設置</div><div class="check-note">Room · Environment</div></div></div>
+  <div class="check-item" data-id="c18"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">ニトリ：ベッドカバー・枕カバー（白 or グレー）</div><div class="check-note">Room · Environment</div></div></div>
+  <div class="check-item" data-id="c19"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">月2〜3回：出会いの場に行く</div><div class="check-note">Social · HUB / 街コン etc.</div></div></div>
+  <div class="check-item" data-id="c20"><div class="checkbox"><span class="check-mark">✓</span></div><div><div class="check-name">服装一式アップデート（62kg 到達後）</div><div class="check-note">Appearance · Post-goal</div></div></div>
+</div>
+
+<!-- ===== WEIGHT ===== -->
+<div class="section" id="s-weight">
+  <div class="card">
+    <div class="card-title">Weight Tracker</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-lbl">Current</div><div class="stat-val" id="w-current">—</div></div>
+      <div class="stat-box"><div class="stat-lbl">Target</div><div class="stat-val c-blue">62.0</div></div>
+      <div class="stat-box"><div class="stat-lbl">Remaining</div><div class="stat-val" id="w-remain">—</div></div>
+    </div>
+    <div class="graph-wrap"><canvas id="weightChart" height="160"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">History</div>
+    <div id="w-hist-list"><div class="empty-state"><div class="empty-icon">⚖</div>チャットで体重を報告すると<br>ここに記録が表示される</div></div>
+  </div>
+</div>
+
+<!-- ===== NUTRITION ===== -->
+<div class="section" id="s-foods">
+  <div class="card">
+    <div class="card-title">Analytics</div>
+    <div class="chart-tabs">
+      <button class="chart-tab active" onclick="showChart('calorie',this)">Calories</button>
+      <button class="chart-tab" onclick="showChart('balance',this)">収支</button>
+      <button class="chart-tab" onclick="showChart('pfc',this)">PFC</button>
+    </div>
+    <div class="chart-panel active" id="cp-calorie">
+      <div class="chart-stat-row">
+        <div class="chart-stat"><div class="cs-lbl">7日平均</div><div class="cs-val c-blue" id="avg-intake">—</div></div>
+        <div class="chart-stat"><div class="cs-lbl">目標</div><div class="cs-val" style="color:var(--muted2)">1,800</div></div>
+        <div class="chart-stat"><div class="cs-lbl">最新</div><div class="cs-val" id="latest-intake">—</div></div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="calorieChart" height="150"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>摂取カロリー</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.3)"></div>目標 1,800kcal</div>
+      </div>
+    </div>
+    <div class="chart-panel" id="cp-balance">
+      <div class="chart-stat-row">
+        <div class="chart-stat"><div class="cs-lbl">7日平均収支</div><div class="cs-val" id="avg-balance">—</div></div>
+        <div class="chart-stat"><div class="cs-lbl">累計消費</div><div class="cs-val c-green" id="total-burn">—</div></div>
+        <div class="chart-stat"><div class="cs-lbl">累計超過</div><div class="cs-val" id="total-surplus">—</div></div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="balanceChart" height="150"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>摂取</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>消費</div>
+      </div>
+    </div>
+    <div class="chart-panel" id="cp-pfc">
+      <div class="chart-stat-row">
+        <div class="chart-stat"><div class="cs-lbl">P 平均</div><div class="cs-val" style="color:#60a5fa" id="avg-p">—</div></div>
+        <div class="chart-stat"><div class="cs-lbl">F 平均</div><div class="cs-val" style="color:#f59e0b" id="avg-f">—</div></div>
+        <div class="chart-stat"><div class="cs-lbl">C 平均</div><div class="cs-val" style="color:#a78bfa" id="avg-c">—</div></div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="pfcChart" height="150"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Protein</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Fat</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Carbs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercise log view -->
+  <div class="card">
+    <div class="card-title">Exercise Log</div>
+    <div id="ex-list"><div class="empty-state"><div class="empty-icon">🏋️</div>チャットで運動を報告すると<br>ここに記録が表示される</div></div>
+  </div>
+
+  <!-- Daily Records -->
+  <div class="card-title" style="margin-top:0.3rem;">Daily Records</div>
+  <div id="summary-list"><div class="empty-state"><div class="empty-icon">📊</div>チャットで食事を報告すると<br>ここに日別記録が表示される</div></div>
+
+  <!-- Food Guide -->
+  <div class="card" style="margin-top:0.5rem;">
+    <div class="card-title">Food Guide</div>
+    <div class="cat-tabs">
+      <button class="cat-tab active" onclick="showFC('conv',this)">コンビニ</button>
+      <button class="cat-tab" onclick="showFC('ext',this)">外食</button>
+      <button class="cat-tab" onclick="showFC('ng',this)">NG Foods</button>
+    </div>
+    <div class="sub-panel active" id="fc-conv">
+      <div class="grade-block"><div class="grade-lbl gl-good">◎ Best</div><div class="food-grid">
+        <div class="food-chip"><div class="fc-name">サラダチキン</div><div class="fc-note">High protein, low cal</div></div>
+        <div class="food-chip"><div class="fc-name">ゆで卵</div><div class="fc-note">6g protein/egg</div></div>
+        <div class="food-chip"><div class="fc-name">ギリシャヨーグルト</div><div class="fc-note">10g+ protein</div></div>
+        <div class="food-chip"><div class="fc-name">豆腐（小パック）</div><div class="fc-note">Low carb, plant protein</div></div>
+        <div class="food-chip"><div class="fc-name">無添加ナッツ</div><div class="fc-note">Healthy fats</div></div>
+        <div class="food-chip"><div class="fc-name">温泉卵</div><div class="fc-note">Easy protein</div></div>
+      </div></div>
+      <div class="grade-block"><div class="grade-lbl gl-ok">○ OK</div><div class="food-grid">
+        <div class="food-chip"><div class="fc-name">おにぎり（塩・昆布）</div><div class="fc-note">1個まで</div></div>
+        <div class="food-chip"><div class="fc-name">ザバスミルクプロテイン</div><div class="fc-note">Ready-to-drink</div></div>
+        <div class="food-chip"><div class="fc-name">野菜スープ</div><div class="fc-note">Fiber, filling</div></div>
+        <div class="food-chip"><div class="fc-name">枝豆</div><div class="fc-note">Plant protein</div></div>
+      </div></div>
+      <div class="grade-block"><div class="grade-lbl gl-bad">× Avoid</div><div class="food-grid">
+        <div class="food-chip"><div class="fc-name">カップラーメン</div><div class="fc-note">High sodium, empty cal</div></div>
+        <div class="food-chip"><div class="fc-name">菓子パン</div><div class="fc-note">Sugar + fat combo</div></div>
+        <div class="food-chip"><div class="fc-name">ポテチ・スナック</div><div class="fc-note">Don't buy it</div></div>
+        <div class="food-chip"><div class="fc-name">大袋チョコ菓子</div><div class="fc-note">Can't stop eating</div></div>
+      </div></div>
+    </div>
+    <div class="sub-panel" id="fc-ext">
+      <div class="grade-block"><div class="grade-lbl gl-good">◎ Best</div><div class="food-grid">
+        <div class="food-chip"><div class="fc-name">焼き魚定食</div><div class="fc-note">Protein + omega-3</div></div>
+        <div class="food-chip"><div class="fc-name">鶏の塩焼き定食</div><div class="fc-note">Lean protein</div></div>
+        <div class="food-chip"><div class="fc-name">蕎麦（かけ・もり）</div><div class="fc-note">Low GI</div></div>
+        <div class="food-chip"><div class="fc-name">刺身盛り合わせ</div><div class="fc-note">Best izakaya choice</div></div>
+        <div class="food-chip"><div class="fc-name">焼き鳥（塩）</div><div class="fc-note">Salt over tare</div></div>
+        <div class="food-chip"><div class="fc-name">サラダ＋グリル系</div><div class="fc-note">Family restaurant pick</div></div>
+      </div></div>
+      <div class="grade-block"><div class="grade-lbl gl-ok">○ OK (週2まで)</div><div class="food-grid">
+        <div class="food-chip"><div class="fc-name">ラーメン（週1）</div><div class="fc-note">No kaedama, leave soup</div></div>
+        <div class="food-chip"><div class="fc-name">牛丼（並）</div><div class="fc-note">少なめで</div></div>
+        <div class="food-chip"><div class="fc-name">カレー（普通盛り）</div><div class="fc-note">ルー少なめ</div></div>
+        <div class="food-chip"><div class="fc-name">ハンバーガー</div><div class="fc-note">Single, no fries</div></div>
+      </div></div>
+      <div class="grade-block"><div class="grade-lbl gl-bad">× Avoid</div><div class="food-grid">
+        <div class="food-chip"><div class="fc-name">ラーメン＋ライス</div><div class="fc-note">Double carbs</div></div>
+        <div class="food-chip"><div class="fc-name">揚げ物大盛り</div><div class="fc-note">Visceral fat direct</div></div>
+        <div class="food-chip"><div class="fc-name">食べ放題</div><div class="fc-note">Banned until 7/30</div></div>
+        <div class="food-chip"><div class="fc-name">深夜の外食</div><div class="fc-note">Nothing after 22:00</div></div>
+      </div></div>
+    </div>
+    <div class="sub-panel" id="fc-ng">
+      <div class="guide-item"><div class="guide-title">🚫 ラーメン＋ライスのセット</div><div class="guide-body">糖質二重コンボ。どちらかを選ぶこと。</div></div>
+      <div class="guide-item"><div class="guide-title">🚫 22時以降の食事</div><div class="guide-body">どうしても必要なら少量のタンパク質のみ。</div></div>
+      <div class="guide-item"><div class="guide-title">🚫 飲み会後のシメ</div><div class="guide-body">内臓脂肪の主因。水を飲んで帰る。</div></div>
+      <div class="guide-item"><div class="guide-title">🚫 砂糖入り飲み物</div><div class="guide-body">コーラ・甘いラテ・ジュース → 水・ブラックコーヒー・お茶に切り替え。</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GUIDE ===== -->
+<div class="section" id="s-guide">
+  <div class="card">
+    <div class="card-title">Guides</div>
+    <div class="cat-tabs">
+      <button class="cat-tab active" onclick="showGC('g-skin',this)">Skincare</button>
+      <button class="cat-tab" onclick="showGC('g-gym',this)">Training</button>
+      <button class="cat-tab" onclick="showGC('g-supp',this)">Supplements</button>
+      <button class="cat-tab" onclick="showGC('g-room',this)">Room</button>
+    </div>
+    <div class="sub-panel active" id="g-skin">
+      <div class="guide-item"><div class="guide-title">🌅 Morning Routine</div><div class="guide-body">① 泡洗顔（泡立てネット・30秒）<br>② 化粧水（無印 敏感肌高保湿）<br>③ 乳液（無印 敏感肌高保湿）<br>④ 日焼け止め（アネッサ SPF50）外出前に必ず</div></div>
+      <div class="guide-item"><div class="guide-title">🌙 Evening Routine</div><div class="guide-body">① 泡洗顔<br>② 化粧水（多めにつけてOK）<br>③ 乳液<br><br>夜は保湿多めで肌が回復する。</div></div>
+      <div class="guide-item"><div class="guide-title">💡 Consistency Tip</div><div class="guide-body">洗面台の見えるところに全部並べておく。しまわない。面倒な日は化粧水だけでもOK。</div></div>
+    </div>
+    <div class="sub-panel" id="g-gym">
+      <div class="guide-item"><div class="guide-title">🔥 DAY A — Chest · Shoulder · Triceps</div><div class="guide-body">ベンチプレス / チェストプレス：3×10<br>インクラインダンベルプレス：3×12<br>ショルダープレス：3×10<br>サイドレイズ：3×15<br>プッシュダウン：3×12<br>+ 有酸素 20〜30分</div></div>
+      <div class="guide-item"><div class="guide-title">💪 DAY B — Back · Core</div><div class="guide-body">ラットプルダウン：3×10<br>ケーブルロウ：3×12<br>フェイスプル：3×15<br>クランチ / レッグレイズ：3×15<br>プランク：30〜60秒 ×3<br>+ 有酸素 20〜30分</div></div>
+      <div class="guide-item"><div class="guide-title">🦵 Legs (土日 add-on)</div><div class="guide-body">レッグプレス：3×10<br>スクワット：3×10<br>レッグカール：3×12</div></div>
+    </div>
+    <div class="sub-panel" id="g-supp">
+      <div class="guide-item"><div class="guide-title">💊 Supplement Schedule</div><div class="guide-body" style="padding:0;"><div style="padding:.4rem 0;">
+        <div class="supp-row"><span class="supp-time">朝食後</span><span>エビオス</span><span class="supp-dose">10錠</span></div>
+        <div class="supp-row"><span class="supp-time">朝食後</span><span>ビタミン D3</span><span class="supp-dose">1錠</span></div>
+        <div class="supp-row"><span class="supp-time">朝食後</span><span>オメガ3</span><span class="supp-dose">1〜2錠</span></div>
+        <div class="supp-row"><span class="supp-time">昼食後</span><span>エビオス</span><span class="supp-dose">10錠</span></div>
+        <div class="supp-row"><span class="supp-time">夕食後</span><span>エビオス</span><span class="supp-dose">10錠</span></div>
+        <div class="supp-row"><span class="supp-time">夕食後</span><span>マカ 10000</span><span class="supp-dose">8錠</span></div>
+        <div class="supp-row"><span class="supp-time">就寝1h前</span><span>マグネシウム</span><span class="supp-dose">1〜2錠</span></div>
+        <div class="supp-row"><span class="supp-time">就寝1h前</span><span>L-テアニン</span><span class="supp-dose">1錠</span></div>
+        <div class="supp-row"><span class="supp-time">筋トレ後</span><span>プロテイン</span><span class="supp-dose">1杯</span></div>
+      </div></div></div>
+    </div>
+    <div class="sub-panel" id="g-room">
+      <div class="guide-item"><div class="guide-title">🗑️ Immediate Actions</div><div class="guide-body">① ゴミ袋で床のゴミを全部撤去（10分）<br>② 着ない服を全部処分<br>③ 粗大ゴミ申請（自治体サイトから）<br>④ トイレ・洗面台を拭き掃除</div></div>
+      <div class="guide-item"><div class="guide-title">🛏️ Bed Purchase (ニトリ)</div><div class="guide-body">収納付きセミダブル（N-ジオC推奨）<br>マットレスと同時購入で配送1回<br>組み立て設置サービスを必ず頼む<br>カバーは白 or グレー無地</div></div>
+      <div class="guide-item"><div class="guide-title">✨ Room Upgrade</div><div class="guide-body">・床に物を置かない状態をキープ<br>・調光できる間接照明を設置<br>・トイレ・洗面台は常に清潔に<br>・観葉植物（フェイクOK）<br>・Bluetoothスピーカー</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GOALS ===== -->
+<div class="section" id="s-goals">
+  <div class="card">
+    <div class="card-title">Goals · 7.30</div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.8rem;">
+      <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:10px;padding:0.8rem 1rem;">
+        <div style="font-size:0.65rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Weight Goal</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:white;">70 <span style="font-size:0.9rem;color:var(--muted);">→</span> 62 <span style="font-size:0.75rem;color:var(--muted);">kg</span></div>
+        <div style="font-size:0.68rem;color:var(--muted2);margin-top:0.2rem;">−8 kg · 167 cm</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+        <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:10px;padding:0.75rem;">
+          <div style="font-size:0.6rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.2rem;">Mid Goal</div>
+          <div style="font-size:0.88rem;font-weight:600;">65 kg台</div>
+          <div style="font-size:0.62rem;color:var(--muted);">6月末まで</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border2);border-radius:10px;padding:0.75rem;">
+          <div style="font-size:0.6rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.2rem;">Training</div>
+          <div style="font-size:0.88rem;font-weight:600;">週3回</div>
+          <div style="font-size:0.62rem;color:var(--muted);">エニタイム</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Motivation Board</div>
+    <div class="motiv-upload" onclick="document.getElementById('motiv-file').click()">
+      <input type="file" id="motiv-file" accept="image/*" multiple onchange="addMI(this.files)">
+      <div style="font-size:1.3rem;margin-bottom:0.35rem;">＋</div>
+      <div style="font-size:0.76rem;color:var(--muted);">Add photos · goals · inspiration</div>
+    </div>
+    <div class="motiv-grid" id="mgrid"></div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showSection('s-home',this)"><span class="nav-icon">✓</span><span class="nav-label">Tasks</span></button>
+  <button class="nav-btn" onclick="showSection('s-weight',this)"><span class="nav-icon">⚖</span><span class="nav-label">Weight</span></button>
+  <button class="nav-btn" onclick="showSection('s-foods',this)"><span class="nav-icon">◎</span><span class="nav-label">Nutrition</span></button>
+  <button class="nav-btn" onclick="showSection('s-guide',this)"><span class="nav-icon">≡</span><span class="nav-label">Guide</span></button>
+  <button class="nav-btn" onclick="showSection('s-goals',this)"><span class="nav-icon">◈</span><span class="nav-label">Goals</span></button>
+</div>
+
+<script>
+const GAS='https://script.google.com/macros/s/AKfycby35BN2FOLEYk6yzTNHq3Fo8vBU-hLDJPUmDhodn6iP2zuUTxzaYPmXOEaQDUSnukIHuA/exec';
+
+function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+function setSyncStatus(msg,col){
+  const el=document.getElementById('sync-status');
+  el.textContent=msg;el.style.color=col||'var(--green)';el.style.opacity='1';
+  setTimeout(()=>{el.style.opacity='0';},2500);
+}
+
+async function fullSync(){
+  setSyncStatus('⟳ 同期中…','var(--blue3)');
+  try{
+    const [s,w,e,t]=await Promise.all([
+      fetch(GAS+'?type=summaries').then(r=>r.json()).catch(()=>null),
+      fetch(GAS+'?type=weights').then(r=>r.json()).catch(()=>null),
+      fetch(GAS+'?type=exercises').then(r=>r.json()).catch(()=>null),
+      fetch(GAS+'?type=tasks').then(r=>r.json()).catch(()=>null),
+    ]);
+    if(s&&s.length){sv('dailySummaries',s);}
+    if(w&&w.length){sv('weightHist',w);}
+    if(e&&e.length){sv('exerciseLogs',e);}
+    if(t){sv('checkDone',t);}
+    renderAll();
+    setSyncStatus('✓ 同期完了');
+  }catch(err){setSyncStatus('⚠ 失敗','var(--red)');}
+}
+
+// ── NAV ──
+function showSection(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');btn.classList.add('active');
+  if(id==='s-weight')drawWeightChart();
+  if(id==='s-foods'){drawCalorieChart();drawBalanceChart();drawPFCChart();drawSummaries();drawExList();}
+}
+
+// ── CHECKLIST (read-only, tasks come from Sheets) ──
+const STATUS=['No progress yet.','Getting started.','Building consistency.','Halfway there. Solid.','Strong progress.','Almost done.','All tasks complete.'];
+function initTasks(){
+  const done=ld('checkDone',{});
+  document.querySelectorAll('.check-item').forEach(el=>{
+    if(done[el.dataset.id])el.classList.add('done');
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const items=document.querySelectorAll('.check-item');
+  const n=document.querySelectorAll('.check-item.done').length;
+  const total=items.length;
+  const pct=total?Math.round(n/total*100):0;
+  document.getElementById('progressNum').textContent=n;
+  document.getElementById('progressTotal').textContent=total;
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressBar').style.width=pct+'%';
+  const idx=Math.min(Math.floor((n/total)*(STATUS.length-1)),STATUS.length-1);
+  document.getElementById('statusText').textContent=STATUS[isNaN(idx)?0:idx];
+  document.getElementById('congrats').classList.toggle('show',n===total&&total>0);
+}
+
+// ── TODAY CARD ──
+function renderTodayCard(){
+  const summaries=ld('dailySummaries',[]);
+  const exercises=ld('exerciseLogs',[]);
+  const today=new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+  const s=summaries.find(x=>x.date===today||x.date&&x.date.endsWith('/'+today.replace(/^\d+\//,'')));
+  const todayEx=exercises.filter(x=>x.date===today);
+  const totalBurn=todayEx.reduce((a,x)=>a+(x.kcal||0),0)+(s?.burnNum||0);
+  if(!s&&!totalBurn){document.getElementById('today-card').style.display='none';return;}
+  document.getElementById('today-card').style.display='block';
+  const kcal=s?.kcalNum||0;
+  const p=s?.pNum||0;
+  const balance=kcal-totalBurn;
+  document.getElementById('t-kcal').textContent=kcal?kcal.toLocaleString()+'kcal':'—';
+  document.getElementById('t-kcal-sub').textContent=kcal?'目標 1,800kcal':'';
+  document.getElementById('t-burn').textContent=totalBurn?'-'+totalBurn+'kcal':'—';
+  document.getElementById('t-p').textContent=p?p+'g':'—';
+  const balEl=document.getElementById('t-balance');
+  balEl.textContent=balance?(balance>0?'+':'')+balance+'kcal':'—';
+  balEl.className='ts-val '+(balance>200?'c-red':balance<-200?'c-green':'c-amber');
+  document.getElementById('t-balance-sub').textContent=balance>0?'摂取過多':'赤字（脂肪燃焼中）';
+  const pct=kcal?Math.min(kcal/1800*100,130):0;
+  const bar=document.getElementById('t-bar');
+  bar.style.width=pct+'%';
+  bar.style.background=kcal>2000?'var(--red)':kcal>1800?'var(--amber)':'var(--green)';
+  const score=s?.score||'';
+  document.getElementById('t-score-label').textContent=score?'評価: '+score:'';
+}
+
+// ── WEIGHT CHART ──
+function updWStats(){
+  const hist=ld('weightHist',[]);
+  const cur=document.getElementById('w-current');
+  const rem=document.getElementById('w-remain');
+  if(!hist.length){cur.textContent='—';cur.className='stat-val';rem.textContent='—';rem.className='stat-val';return;}
+  const v=parseFloat(hist[hist.length-1].val);
+  cur.textContent=v.toFixed(1)+' kg';
+  const diff=v-62;
+  if(diff<=0){cur.className='stat-val c-green';rem.textContent='✓ Done';rem.className='stat-val c-green';}
+  else{cur.className='stat-val '+(diff>5?'c-red':'c-amber');rem.textContent=diff.toFixed(1)+' kg';rem.className='stat-val '+(diff>5?'c-red':'c-amber');}
+}
+function drawWHist(){
+  const hist=ld('weightHist',[]);
+  const el=document.getElementById('w-hist-list');
+  if(!hist.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">⚖</div>チャットで体重を報告すると<br>ここに記録が表示される</div>';return;}
+  el.innerHTML=[...hist].reverse().slice(0,20).map(h=>`<div class="hist-item"><span style="color:var(--muted);font-size:.68rem;">${h.date}</span><span style="font-weight:600;">${parseFloat(h.val).toFixed(1)} kg</span></div>`).join('');
+}
+function drawWeightChart(){
+  const hist=ld('weightHist',[]);
+  const canvas=document.getElementById('weightChart');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||300,H=160;
+  canvas.width=W*window.devicePixelRatio;canvas.height=H*window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
+  ctx.clearRect(0,0,W,H);
+  if(!hist.length){ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='12px DM Sans';ctx.textAlign='center';ctx.fillText('体重記録なし',W/2,H/2);return;}
+  const vals=hist.map(h=>parseFloat(h.val));
+  const mx=Math.max(...vals,70.5),mn=Math.min(...vals,62)-0.5;
+  const pad={t:12,b:28,l:36,r:12};
+  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  const xOf=i=>pad.l+i/(Math.max(vals.length-1,1))*gW;
+  const yOf=v=>pad.t+(1-(v-mn)/(mx-mn))*gH;
+  [62,64,66,68,70].forEach(g=>{
+    if(g<mn||g>mx)return;
+    ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(pad.l,yOf(g));ctx.lineTo(W-pad.r,yOf(g));ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px DM Sans';ctx.textAlign='right';ctx.fillText(g,pad.l-4,yOf(g)+3);
+  });
+  ctx.strokeStyle='rgba(74,144,226,0.3)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,yOf(62));ctx.lineTo(W-pad.r,yOf(62));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(96,165,250,0.6)';ctx.font='bold 8px DM Sans';ctx.textAlign='left';ctx.fillText('Target 62',pad.l+2,yOf(62)-3);
+  if(vals.length>1){
+    const grad=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+    grad.addColorStop(0,'rgba(37,99,235,0.2)');grad.addColorStop(1,'rgba(37,99,235,0)');
+    ctx.beginPath();ctx.moveTo(xOf(0),yOf(vals[0]));
+    vals.forEach((v,i)=>ctx.lineTo(xOf(i),yOf(v)));
+    ctx.lineTo(xOf(vals.length-1),H-pad.b);ctx.lineTo(xOf(0),H-pad.b);ctx.closePath();
+    ctx.fillStyle=grad;ctx.fill();
+    const lg=ctx.createLinearGradient(pad.l,0,W-pad.r,0);
+    lg.addColorStop(0,'#2563eb');lg.addColorStop(1,'#22d3ee');
+    ctx.strokeStyle=lg;ctx.lineWidth=2;ctx.beginPath();
+    vals.forEach((v,i)=>i===0?ctx.moveTo(xOf(i),yOf(v)):ctx.lineTo(xOf(i),yOf(v)));
+    ctx.stroke();
+  }
+  vals.forEach((v,i)=>{ctx.beginPath();ctx.arc(xOf(i),yOf(v),3.5,0,Math.PI*2);ctx.fillStyle=v<=62?'#10b981':'#60a5fa';ctx.fill();});
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px DM Sans';ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(vals.length/5));
+  hist.forEach((h,i)=>{if(i%step===0||i===hist.length-1)ctx.fillText(h.date,xOf(i),H-8);});
+}
+
+// ── CHART TABS ──
+function showChart(id,btn){
+  document.querySelectorAll('.chart-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cp-'+id).classList.add('active');btn.classList.add('active');
+  if(id==='calorie')drawCalorieChart();
+  if(id==='balance')drawBalanceChart();
+  if(id==='pfc')drawPFCChart();
+}
+function initCanvas(id,h){
+  const c=document.getElementById(id);
+  const W=c.offsetWidth||300;
+  c.width=W*window.devicePixelRatio;c.height=h*window.devicePixelRatio;c.style.height=h+'px';
+  const ctx=c.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,W,h);
+  return{ctx,W,H:h};
+}
+function emptyChart(ctx,W,H,msg='データなし。チャットで報告して♡'){
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='11px DM Sans';ctx.textAlign='center';ctx.fillText(msg,W/2,H/2);
+}
+function drawCalorieChart(){
+  const data=ld('dailySummaries',[]).slice(0,14).reverse();
+  const {ctx,W,H}=initCanvas('calorieChart',150);
+  if(!data.length){emptyChart(ctx,W,H);return;}
+  const vals=data.map(d=>d.kcalNum||0);
+  const target=1800,mx=Math.max(...vals,target+200);
+  const pad={t:10,b:28,l:8,r:8},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  const bw=Math.max(8,gW/vals.length-4);
+  const ty=pad.t+(1-target/mx)*gH;
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,ty);ctx.lineTo(W-pad.r,ty);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px DM Sans';ctx.textAlign='right';ctx.fillText('1800',W-pad.r-2,ty-3);
+  vals.forEach((v,i)=>{
+    const x=pad.l+i*(gW/vals.length)+(gW/vals.length-bw)/2;
+    const bh=Math.max(2,(v/mx)*gH),y=pad.t+gH-bh;
+    ctx.fillStyle=v>target?'rgba(239,68,68,0.7)':'rgba(96,165,250,0.7)';
+    ctx.beginPath();ctx.roundRect(x,y,bw,bh,3);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px DM Sans';ctx.textAlign='center';
+    ctx.fillText(data[i].date.replace(/\d+\//,''),x+bw/2,H-6);
+  });
+  const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  document.getElementById('avg-intake').textContent=avg.toLocaleString()+'kcal';
+  document.getElementById('latest-intake').textContent=(vals[vals.length-1]||0).toLocaleString()+'kcal';
+}
+function drawBalanceChart(){
+  const summaries=ld('dailySummaries',[]).slice(0,14).reverse();
+  const exercises=ld('exerciseLogs',[]);
+  const {ctx,W,H}=initCanvas('balanceChart',150);
+  if(!summaries.length){emptyChart(ctx,W,H);return;}
+  const burnByDate={};exercises.forEach(e=>{burnByDate[e.date]=(burnByDate[e.date]||0)+(e.kcal||0);});
+  const data=summaries.map(s=>({date:s.date,intake:s.kcalNum||0,burn:burnByDate[s.date]||s.burnNum||0}));
+  const mx=Math.max(...data.map(d=>Math.max(d.intake,d.burn)),100);
+  const pad={t:10,b:28,l:8,r:8},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  const bw=Math.max(5,(gW/data.length)/3-1),grpW=gW/data.length;
+  data.forEach((d,i)=>{
+    const x=pad.l+i*grpW;
+    const ih=Math.max(2,(d.intake/mx)*gH);
+    ctx.fillStyle='rgba(96,165,250,0.65)';ctx.beginPath();ctx.roundRect(x+(grpW-bw*2.5)/2,pad.t+gH-ih,bw,ih,2);ctx.fill();
+    if(d.burn>0){const bh=Math.max(2,(d.burn/mx)*gH);ctx.fillStyle='rgba(16,185,129,0.65)';ctx.beginPath();ctx.roundRect(x+(grpW-bw*2.5)/2+bw+2,pad.t+gH-bh,bw,bh,2);ctx.fill();}
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px DM Sans';ctx.textAlign='center';ctx.fillText(d.date.replace(/\d+\//,''),x+grpW/2,H-6);
+  });
+  const avgBal=Math.round(data.reduce((a,d)=>a+(d.intake-d.burn),0)/data.length);
+  const totBurn=data.reduce((a,d)=>a+d.burn,0);
+  const totSurplus=data.reduce((a,d)=>a+(d.intake-d.burn>0?d.intake-d.burn:0),0);
+  const balEl=document.getElementById('avg-balance');
+  balEl.textContent=(avgBal>0?'+':'')+avgBal+'kcal';
+  balEl.className='cs-val '+(avgBal>0?'c-red':avgBal<-200?'c-green':'c-amber');
+  document.getElementById('total-burn').textContent=totBurn.toLocaleString()+'kcal';
+  document.getElementById('total-surplus').textContent=totSurplus.toLocaleString()+'kcal';
+}
+function drawPFCChart(){
+  const data=ld('dailySummaries',[]).slice(0,10).reverse().filter(d=>d.pNum||d.fNum||d.cNum);
+  const {ctx,W,H}=initCanvas('pfcChart',150);
+  if(!data.length){emptyChart(ctx,W,H,'PFCデータなし');return;}
+  const pad={t:10,b:28,l:8,r:8},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b,grpW=gW/data.length;
+  const bw=Math.max(5,grpW/4-1);
+  const mx=Math.max(...data.map(d=>Math.max(d.pNum||0,d.fNum||0,d.cNum||0)),1);
+  const colors=['#60a5fa','#f59e0b','#a78bfa'];
+  data.forEach((d,i)=>{
+    const x=pad.l+i*grpW+(grpW-bw*3-4)/2;
+    [d.pNum||0,d.fNum||0,d.cNum||0].forEach((v,j)=>{
+      const bh=Math.max(2,(v/mx)*gH);
+      ctx.fillStyle=colors[j]+'bb';ctx.beginPath();ctx.roundRect(x+j*(bw+2),pad.t+gH-bh,bw,bh,2);ctx.fill();
+    });
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px DM Sans';ctx.textAlign='center';ctx.fillText(d.date.replace(/\d+\//,''),x+bw*1.5+2,H-6);
+  });
+  const n=data.length;
+  document.getElementById('avg-p').textContent=Math.round(data.reduce((a,d)=>a+(d.pNum||0),0)/n)+'g';
+  document.getElementById('avg-f').textContent=Math.round(data.reduce((a,d)=>a+(d.fNum||0),0)/n)+'g';
+  document.getElementById('avg-c').textContent=Math.round(data.reduce((a,d)=>a+(d.cNum||0),0)/n)+'g';
+}
+
+// ── SUMMARIES ──
+function drawSummaries(){
+  const s=ld('dailySummaries',[]);
+  const el=document.getElementById('summary-list');
+  if(!s.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📊</div>チャットで食事を報告すると<br>ここに日別記録が表示される</div>';return;}
+  el.innerHTML=s.slice(0,30).map(x=>`
+    <div class="summary-card">
+      <div class="summary-header">
+        <div class="summary-date">${x.date}</div>
+        <div class="summary-score ${x.score}">${x.score}</div>
+      </div>
+      <div class="summary-stats">
+        <div class="ss-item"><div class="ss-lbl">Calories</div><div class="ss-val">${x.kcal||'—'}</div></div>
+        <div class="ss-item"><div class="ss-lbl">Protein</div><div class="ss-val">${x.protein||'—'}</div></div>
+        <div class="ss-item"><div class="ss-lbl">Exercise</div><div class="ss-val" style="color:var(--green)">${x.burnNum?x.burnNum+'kcal':'—'}</div></div>
+      </div>
+      ${x.pNum||x.fNum||x.cNum?`<div style="font-size:0.65rem;color:var(--muted);margin-top:0.3rem;">P:${x.pNum||0}g / F:${x.fNum||0}g / C:${x.cNum||0}g</div>`:''}
+      ${x.comment?`<div class="summary-comment" style="margin-top:0.3rem;">${x.comment}</div>`:''}
+    </div>`).join('');
+}
+
+// ── EXERCISE ──
+function drawExList(){
+  const logs=ld('exerciseLogs',[]);
+  const el=document.getElementById('ex-list');
+  if(!logs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🏋️</div>チャットで運動を報告すると<br>ここに記録が表示される</div>';return;}
+  const icons={'筋トレ':'🏋️','ランニング':'🏃','ウォーキング':'🚶','自転車':'🚴','HIIT':'⚡','水泳':'🏊','有酸素':'💨'};
+  el.innerHTML=logs.slice(0,20).map(l=>{
+    const icon=Object.entries(icons).find(([k])=>l.name&&l.name.includes(k))?.[1]||'💪';
+    return`<div class="ex-item"><div class="ex-icon">${icon}</div><div class="ex-body"><div class="ex-name-t">${l.name}</div><div class="ex-meta">${l.date} · ${l.min}分</div></div><div class="ex-kcal">-${l.kcal}kcal</div></div>`;
+  }).join('');
+}
+
+// ── FOOD CATS ──
+function showFC(id,btn){
+  document.querySelectorAll('#s-foods .sub-panel').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('#s-foods .cat-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('fc-'+id).classList.add('active');btn.classList.add('active');
+}
+function showGC(id,btn){
+  document.querySelectorAll('#s-guide .sub-panel').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('#s-guide .cat-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');btn.classList.add('active');
+}
+
+// ── MOTIV ──
+function addMI(files){
+  const imgs=ld('motivImgs',[]);
+  Array.from(files).forEach(f=>{const r=new FileReader();r.onload=e=>{imgs.push(e.target.result);sv('motivImgs',imgs);drawMI();};r.readAsDataURL(f);});
+}
+function delMI(idx){const imgs=ld('motivImgs',[]);imgs.splice(idx,1);sv('motivImgs',imgs);drawMI();}
+function drawMI(){
+  const imgs=ld('motivImgs',[]);
+  document.getElementById('mgrid').innerHTML=imgs.map((src,i)=>`<div class="motiv-wrap"><img src="${src}"><button class="motiv-del" onclick="delMI(${i})">✕</button></div>`).join('');
+}
+
+// ── RENDER ALL ──
+function renderAll(){
+  initTasks();updWStats();drawWHist();drawSummaries();drawExList();drawMI();renderTodayCard();
+  if(document.getElementById('s-weight').classList.contains('active'))drawWeightChart();
+  if(document.getElementById('s-foods').classList.contains('active')){drawCalorieChart();drawBalanceChart();drawPFCChart();}
+}
+
+// ── INIT ──
+renderAll();
+window.addEventListener('resize',()=>{
+  if(document.getElementById('s-weight').classList.contains('active'))drawWeightChart();
+  if(document.getElementById('s-foods').classList.contains('active')){drawCalorieChart();drawBalanceChart();drawPFCChart();}
+});
+</script>
+</body>
+</html>
