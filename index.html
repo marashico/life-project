@@ -547,7 +547,7 @@ canvas{width:100%!important;}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbzaI2idI3Kyh7nycCDlwIpIu8vVTUe4Wx1HxohNw4sY0gSFrrYYwUyNo8fFBxpg7v9l/exec';
+const GAS='https://script.google.com/macros/s/AKfycbwqlYigKXBZoAoyDlNfErmQBqRD2lXpWOZ3UinbP_z-A17b1lzuO3HBbJU7v0JAASzJgw/exec';
 
 function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
@@ -1017,6 +1017,34 @@ function showToast(msg,ok){
   t._timer=setTimeout(()=>{t.style.opacity='0';},2800);
 }
 
+// ── GAS送信（フォームサブミット方式・CORS完全回避）──
+function sendToGAS(payload){
+  return new Promise((resolve)=>{
+    let iframe=document.getElementById('gas-iframe');
+    if(!iframe){
+      iframe=document.createElement('iframe');
+      iframe.name='gas-iframe';
+      iframe.id='gas-iframe';
+      iframe.style.display='none';
+      document.body.appendChild(iframe);
+    }
+    const form=document.createElement('form');
+    form.method='POST';
+    form.action=GAS;
+    form.target='gas-iframe';
+    form.style.display='none';
+    const input=document.createElement('input');
+    input.type='hidden';
+    input.name='payload';
+    input.value=JSON.stringify(payload);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    setTimeout(resolve,1000);
+  });
+}
+
 // ── URL PARAMETER HANDLER ──
 async function handleUrlParams(){
   const params=new URLSearchParams(window.location.search);
@@ -1033,13 +1061,8 @@ async function handleUrlParams(){
 
     showToast('記録中…',true);
 
-    // GASに送信
-    await fetch(GAS,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
+    // GASに送信（フォームサブミット方式でCORSを回避）
+    await sendToGAS(payload);
 
     // ローカルにも即反映
     if(type==='meals'){
