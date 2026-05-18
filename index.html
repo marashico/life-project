@@ -547,7 +547,7 @@ canvas{width:100%!important;}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycby35BN2FOLEYk6yzTNHq3Fo8vBU-hLDJPUmDhodn6iP2zuUTxzaYPmXOEaQDUSnukIHuA/exec';
+const GAS='https://script.google.com/macros/s/AKfycbzaI2idI3Kyh7nycCDlwIpIu8vVTUe4Wx1HxohNw4sY0gSFrrYYwUyNo8fFBxpg7v9l/exec';
 
 function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
@@ -1018,16 +1018,15 @@ function showToast(msg,ok){
 }
 
 // ── URL PARAMETER HANDLER ──
-// みなみが出力するリンク形式:
-// https://marashico.github.io/life-project/?d=BASE64_ENCODED_JSON
 async function handleUrlParams(){
   const params=new URLSearchParams(window.location.search);
   const d=params.get('d');
   if(!d)return;
-  // URLパラメータを即座に消す（リロード防止）
   window.history.replaceState({},'',window.location.pathname);
   try{
-    const payload=JSON.parse(atob(decodeURIComponent(d)));
+    // UTF-8対応デコード（日本語文字化け防止）
+    const decoded=decodeURIComponent(escape(atob(d)));
+    const payload=JSON.parse(decoded);
     const type=payload.type;
     const data=payload.data;
     if(!type||!data){showToast('データ形式エラー',false);return;}
